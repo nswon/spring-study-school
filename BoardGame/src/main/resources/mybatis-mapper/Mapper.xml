@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.boardgame.repository.MyBatisMapper">
+
+    <select id="findAll" resultType="Map">
+        select * from user
+    </select>
+    <select id="boardAll" resultType="Map">
+        select * from board
+    </select>
+    <select id="findById" statementType="CALLABLE" parameterType="HashMap"  resultType="HashMap">
+        SELECT *
+        FROM board
+        WHERE id LIKE #{id}
+    </select>
+
+    <select id="findBoard" statementType="CALLABLE" parameterType="HashMap"  resultType="HashMap">
+        SELECT *
+        FROM board
+        WHERE name LIKE #{name}
+    </select>
+
+    <insert id="newBoard" parameterType="HashMap" >
+        INSERT INTO
+        board ( name,distributor,price,min_person,max_person,recommend_person,recommend_age,level,play_time,play_max_time,sex,ment,explain_time,description,media_url)
+        VALUES (#{name},#{distributor},#{price},#{min_person},#{max_person},#{recommend_person},#{recommend_age},#{level},#{play_time},#{play_max_time},#{sex},#{ment},#{explain_time},#{description},#{media_url})
+    </insert>
+
+    <update id="editBoard" parameterType="HashMap">
+        Update board
+        SET name=#{name},distributor=#{distributor},min_person=#{min_person},max_person=#{max_person}
+        where ID=#{boardId}
+    </update>
+
+    <delete id="deleteBoard">
+        DELETE FROM board WHERE id = #{id}
+    </delete>
+
+
+</mapper>

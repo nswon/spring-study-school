@@ -5,6 +5,7 @@ import com.example.BoardGame.entity.Board;
 import com.example.BoardGame.entity.file.FileInfo;
 import com.example.BoardGame.repository.BoardRepository;
 import com.example.BoardGame.repository.FileRepository;
+import com.example.BoardGame.service.MyBatisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.stereotype.Controller;
@@ -25,22 +26,45 @@ import java.util.*;
 @Controller
 public class BoadController {
     //자동연결(기존에 있는 걸로 사용)
+    //    @Autowired
+//    private BoardRepository boardRepository;
+//    @Autowired
+//    private FileRepository fileRepository;
+
     @Autowired
-    private BoardRepository boardRepository;
-    @Autowired
-    private FileRepository fileRepository;
+    MyBatisService myBatisService;
+
+
+    @GetMapping(value = "/boardId")
+    @ResponseBody
+    public HashMap<String, Object> findBoardById(@RequestParam(required = false) Long id){
+        Map<String, Object> response = new HashMap<>();
+        //jpa에 있는 findAll사용
+
+        Board boardList = null;
+        if (id != null) {
+//            boardList = boardRepository.findAllByName(name);
+            HashMap<String,Object> params = new HashMap<String,Object>();
+            params.put("id",id);
+            return myBatisService.findById(params);
+        }
+        else{
+            return null;
+        }
+    }
 
     @GetMapping(value = "/board")
     @ResponseBody
-    public List<Board> allUser(@RequestParam(required = false) String name){
+    public List<Board> findBoard(@RequestParam(required = false) String name){
         Map<String, Object> response = new HashMap<>();
         //jpa에 있는 findAll사용
 
         List<Board> boardList = null;
         if (name != null) {
-            boardList = boardRepository.findAllByName(name);
+//            boardList = boardRepository.findAllByName(name);
+            myBatisService.findBoard(name);
         } else {
-            boardList = boardRepository.findAll();
+            boardList = myBatisService.boardAll();
         }
 
         System.out.println("findAll");
@@ -49,7 +73,7 @@ public class BoadController {
 
     @PostMapping(value = "/newBoard")
     @ResponseBody
-    public Board selectAllUser(Board newBoard, MultipartFile[] files){
+    public HashMap<String, Object> selectAllUser(Board newBoard, MultipartFile[] files){
         GregorianCalendar gc = new GregorianCalendar();
         String today = new SimpleDateFormat("yyyyMMddhhmmss").format(gc.getTime());
 
@@ -84,33 +108,63 @@ public class BoadController {
         System.out.println("파일정보 보드에 추가");
         newBoard.setFileInfo(urls);
         System.out.println("newBoard "+newBoard.toString());
-        Board saveBoard = boardRepository.save(newBoard);
+//        Board saveBoard = boardRepository.save(newBoard);
+        HashMap<String,Object> params = new HashMap<String,Object>();
+        params.put("name",newBoard.getName());
+        params.put("distributor",newBoard.getDistributor());
+        params.put("price",newBoard.getPrice());
+        params.put("min_person",newBoard.getMin_person());
+        params.put("max_person",newBoard.getMax_person());
+        params.put("recommend_person",newBoard.getRecommend_person());
+        params.put("recommend_age",newBoard.getRecommend_age());
+        params.put("level",newBoard.getLevel());
+        params.put("play_time",newBoard.getPlay_time());
+        params.put("play_max_time",newBoard.getPlay_max_time());
+        params.put("sex",newBoard.getSex());
+        params.put("ment",newBoard.getMent());
+        params.put("explain_time",newBoard.getExplain_time());
+        params.put("description",newBoard.getDescription());
+        params.put("media_url",newBoard.getMedia_url());
 
-        return saveBoard;
+        myBatisService.newBoard(params);
+        return params;
     }
+
+
 
     @Transactional
     @Modifying
     @PostMapping(value = "/updateBoard")
     @ResponseBody
-    public Optional<Board> UpdateBoard(
+    public HashMap<String,Object> UpdateBoard(
             @RequestParam("boardId") Long id,
             @RequestParam("name") String name,
             @RequestParam("distributor") String distributor,
             @RequestParam("min_person") int min_person,
             @RequestParam("max_person") int max_person
     ) {
-        Optional<Board> oldBoard = boardRepository.findById(id);
-        oldBoard.ifPresent(selectBoard ->{
-            selectBoard.setName(name);
-            selectBoard.setDistributor(distributor);
-            selectBoard.setMin_person(min_person);
-            selectBoard.setMax_person(max_person);
-            Board updatedBoard = (Board) boardRepository.save(selectBoard);
-        });
-        return boardRepository.findById(id);
-    }
 
+        HashMap<String,Object> params = new HashMap<String,Object>();
+        params.put("boardId",id);
+        params.put("name",name);
+        params.put("distributor",distributor);
+        params.put("min_person",min_person);
+        params.put("max_person",max_person);
+        myBatisService.editBoard(params);
+//        Optional<Board> oldBoard = myBatisService.findById(id);
+//
+//        oldBoard.ifPresent(selectBoard ->{
+//            selectBoard.setName(name);
+//            selectBoard.setDistributor(distributor);
+//            selectBoard.setMin_person(min_person);
+//            selectBoard.setMax_person(max_person);
+//            myBatisService.editBoard(selectBoard)
+//            ;
+//        });
+        params = new HashMap<String,Object>();
+        params.put("id",id);;
+        return myBatisService.findById(params);
+    }
 
 
     @Transactional
@@ -119,8 +173,9 @@ public class BoadController {
     @ResponseBody
     public Boolean DeleteBoard(@RequestParam("board") Long id) {
         try{
-            boardRepository.deleteById(id);
-            return true;
+//            boardRepository.deleteById(id);
+            boolean isSuccess = myBatisService.deleteBoard(id);
+            return isSuccess;
         }
         catch (Exception e){
             return false;
